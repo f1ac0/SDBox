@@ -4,9 +4,9 @@ https://github.com/jbilander/sdbox
 
 I use it to transfer files either to my A500 with internal IDE adapter or to my A600 or 1200 without blocking the PCMCIA port.
 
-The project in this repository is just a recrated board making use of the bare chips instead of breadboard modules.
+The project in this repository is just a recreated board making use of the bare chips instead of breadboard modules.
 - It is smaller
-- It accomodates big SD cards instead of microSD
+- It accommodates big SD cards instead of microSD
 - It takes its power from a Mini or Micro USB or from a pin header (I also use this header as an output to power a serial adapter using the same power pack)
 - It does not include the 2nd LED and power switch
 - It uses SMD stuff (maybe harder to solder)
@@ -50,17 +50,33 @@ Check for shorts at least between 5V, 3.3V, and GND traces before applying power
 
 The programming port does not need to be soldered since it needs to be programmed just once : you can just hold it in place during the few seconds required for programming.
 
-There are several methods to program the uC. I personnaly used a standard TTL serial adapter connected to all the pins of the prog pin header, and with linux and avrdude provided in the arduino setup :
+The blank 328p chip needs to be programmed using its SPI port : for example connect an arduino as ISP, https://www.instructables.com/Burn-a-New-Bootloader-Arduino-Pro-Mini/
 ```
-~/arduino/hardware/tools/avr/bin/avrdude -C~/arduino/hardware/tools/avr/etc/avrdude.conf -v -patmega328p -carduino -P/dev/ttyUSB0 -b57600 -D -Uflash:w:main.hex:i
+Arduino ------------------- this board
+5V (VCC) ------------------ +5V
+GND ----------------------- GND
+Pin 10 -------------------- RST
+Pin 11 -------------------- MOSI
+Pin 12 -------------------- MISO
+Pin 13 -------------------- SCK
+```
+
+Then to program the SDBox firmware on the 328p :
+```
+~/arduino/hardware/tools/avr/bin/avrdude -C ~/arduino/hardware/tools/avr/etc/avrdude.conf -v -patmega328p -cavrisp -P/dev/ttyUSB0 -b19200 -D -Uflash:w:main.hex:i
+```
+
+Alternatively, you may first program an arduino bootloader using the arduino IDE. Then you will be able to later program and update the SDBox firmware through UART TX and RX pins using a USB to serial adapter with :
+```
+~/arduino/hardware/tools/avr/bin/avrdude -C ~/arduino/hardware/tools/avr/etc/avrdude.conf -v -patmega328p -carduino -P/dev/ttyUSB0 -b57600 -D -Uflash:w:main.hex:i
 ```
 
 # Using it
-- Plug it to the parralel port
+- Plug it to the parallel port
 - Plug it to power block
 - Insert SDcard
 - Apply power
-- Turn amiga on
+- Turn Amiga on
 - Install the drivers
 - Mount the sdcard using
 ```
@@ -70,7 +86,8 @@ mount devs:SD0
 ```
 assign SD0: DISMOUNT
 ```
+replace DISMOUNT with REMOVE on Kickstart 1.3.
 
 If you care about your Amiga, this is a bad idea to plug or unplug the parallel port while live.
 
-If you care about the data on the card or the card itself, it might also be a bad idea to plug or unplug it while power is applied. I personnaly have done so several times already without problem so far, just dismount the partition before unplugging.
+If you care about the data on the card or the card itself, it might also be a bad idea to plug or unplug it while power is applied. I personally have done so several times already without problem so far, just dismount the partition before unplugging.
